@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Cooking App - Fridge</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .fridge-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 24px;
+            margin-top: 10px;
+            margin-bottom: 12px;
+        }
+        .fridge-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #972B17;
+        }
+        .fridge-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .filter-icon { width: 24px; height: 24px; object-fit: contain; }
+        .avatar { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
+
+        .fridge-main-card {
+            margin: 0 24px;
+            background: #FCD7D9;
+            border-radius: 24px;
+            padding: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 110px; 
+            overflow: hidden;
+        }
+
+        .card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .card-top h2 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #972B17;
+        }
+        .add-btn {
+            background: rgba(255, 255, 255, 0.4);
+            color: #972B17;
+            border: none;
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .add-btn:active { background: rgba(255, 255, 255, 0.6); }
+        .add-btn img { width: 12px; height: 12px; }
+
+        .ingredient-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            overflow-y: auto;
+            padding-bottom: 10px;
+            scrollbar-width: none;
+            min-height: 100px;
+            flex: 1;
+        }
+        .ingredient-list::-webkit-scrollbar { display: none; }
+
+        .ingredient-row {
+            background: #FFF;
+            border-radius: 16px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .ingredient-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .ingredient-info img {
+            width: 48px; height: 48px; object-fit: contain;
+        }
+        .ingredient-text h3 {
+            font-size: 16px; font-weight: 600; color: #1A1A1A; margin-bottom: 4px;
+        }
+        .ingredient-text p {
+            font-size: 12px; color: #716E65;
+        }
+        .finished-btn {
+            background: transparent;
+            border: 1px solid #972B17;
+            color: #972B17;
+            border-radius: 20px;
+            padding: 6px 16px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .finished-btn:active { background: #972B17; color: #FFF; }
+
+        .empty-state {
+            text-align: center;
+            color: #972B17;
+            opacity: 0.5;
+            font-size: 14px;
+            margin-top: 40px;
+            display: none;
+        }
+
+        .bottom-sheet-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end; 
+        }
+        .bottom-sheet-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        .bottom-sheet-content {
+            background: #F4F2EE; 
+            width: 100%;
+            height: 85vh;
+            border-radius: 32px 32px 0 0;
+            padding: 24px 0 0 0;
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        .bottom-sheet-overlay.active .bottom-sheet-content {
+            transform: translateY(0);
+        }
+        .drag-handle {
+            width: 40px; height: 4px;
+            background: #D1CCC3;
+            border-radius: 2px;
+            margin: -12px auto 16px auto;
+        }
+        .sheet-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #972B17;
+            padding: 0 24px;
+            margin-bottom: 16px;
+        }
+
+        .search-container { 
+            padding: 0 24px; 
+            margin-bottom: 12px; 
+        }
+
+        .search-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            background: #972B17; height: 40px; border-radius: 24px;
+            padding: 0 20px; color: #FFF; font-size: 15px;
+        }
+
+        .sheet-scroll-area {
+            flex: 1; overflow-y: auto; padding: 0 24px 40px 24px; scrollbar-width: none;
+        }
+        .sheet-scroll-area::-webkit-scrollbar { display: none; }
+        
+        .category-card {
+            border-radius: 24px; 
+            padding: 16px; 
+            margin-bottom: 16px;
+            display: flex; 
+            flex-direction: column; 
+            gap: 12px; 
+            overflow: hidden;
+        }
+        .cat-veg { background: #D6E25B; }  
+        .cat-meat { background: #D4C5EA; } 
+        .cat-fruit { background: #F8D87A; } 
+
+        .category-title {
+            font-size: 20px; 
+            font-weight: 600; 
+            color: rgba(0, 0, 0, 0.6);
+            width: 100%; 
+            text-align: left; 
+        }
+
+        .food-horizontal-scroll {
+            display: flex; 
+            gap: 12px; 
+            overflow-x: auto;
+            scrollbar-width: none; 
+            width: 100%; 
+        }
+        .food-horizontal-scroll::-webkit-scrollbar { display: none; }
+
+        .food-item {
+            background: #FFF; border-radius: 16px; padding: 12px;
+            min-width: 100px; height: 120px;
+            display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+            position: relative; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        .action-icon {
+            position: absolute; top: 8px; right: 8px;
+            width: 18px; height: 18px; cursor: pointer;
+            padding: 2px;
+        }
+        .food-img {
+            width: 60px; height: 60px; object-fit: contain; margin-top: 8px;
+        }
+        .food-name { font-size: 14px; font-weight: 600; color: #1A1A1A; }
+
+        .floating-bottom-nav {
+            position: absolute; bottom: max(20px, env(safe-area-inset-bottom, 20px));
+            left: 24px; right: 24px; height: 64px;
+            background: rgba(255, 255, 255, 0.85); 
+            backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+            border-radius: 32px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            display: flex; justify-content: space-around; align-items: center; z-index: 100;
+        }
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: #A39F96;
+            font-size: 10px;
+            font-weight: 500;
+            cursor: pointer;
+            width: 60px;
+            text-decoration: none;
+        }
+        .nav-item.active {
+            color: #972B17;
+        }
+        .nav-icon-box {
+            width: 28px;
+            height: 28px;
+            position: relative; 
+            margin-bottom: 4px;
+        }
+        .nav-icon-box img {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: block;
+            object-fit: contain;
+            filter: grayscale(100%) opacity(50%);
+            transition: 0.2s;
+        }
+        .nav-item.active img {
+            filter: grayscale(0%) opacity(100%);
+        }
+        .nav-item span {
+            font-size: 10px;
+            font-weight: 500;
+            color: #A39F96;
+            line-height: 1;
+        }
+        .nav-item.active span {
+            color: #972B17;
+        }
+        .nav-icon-home { width: 30px; height: 30px; }
+        .nav-icon-fridge { width: 28px; height: 28px; }
+        .nav-icon-fav { width: 23px; height: 23px; }
+        .nav-icon-cook { width: 25px; height: 25px; }
+
+        .toast {
+            position: absolute; top: 60px; left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            background: rgba(30, 30, 30, 0.85); color: #FFF;
+            padding: 10px 20px; border-radius: 20px; font-size: 13px;
+            opacity: 0; transition: all 0.3s; pointer-events: none; z-index: 300;
+            backdrop-filter: blur(10px);
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        
+        <div class="status-bar">
+            <div class="status-left">9:41</div>
+            <div class="status-right">
+                <svg width="18" height="12" viewBox="0 0 18 12" fill="black"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="2" width="3" height="10" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>
+                <div class="battery-icon"><div class="battery-fill"></div></div>
+            </div>
+        </div>
+
+        <div class="fridge-header">
+            <div class="fridge-title">Fridge</div>
+            <div class="fridge-header-actions">
+                <a href="index.html">
+                    <img class="filter-icon" src="preference.png" alt="Preference">
+                </a>
+                <img class="avatar" src="Persona.png" alt="Leila">
+            </div>
+        </div>
+
+        <div class="fridge-main-card">
+            <div class="card-top">
+                <h2>What you have</h2>
+                <div class="add-btn" onclick="openSheet()">
+                    Add <img src="add.png" alt="+">
+                </div>
+            </div>
+
+            <div class="ingredient-list" id="fridgeList">
+            </div>
+            <div class="empty-state" id="emptyState">Your fridge is empty.<br>Click Add to get food!</div>
+        </div>
+
+        <div class="floating-bottom-nav">
+            <a href="Home.html" class="nav-item">
+                <div class="nav-icon-box">
+                    <img class="nav-icon-home" src="home.png" alt="Home">
+                </div>
+                <span>Home</span>
+            </a>
+            
+            <a href="fridge.html" class="nav-item active">
+                <div class="nav-icon-box">
+                    <img class="nav-icon-fridge" src="fridgered.png" alt="Fridge">
+                </div>
+                <span>Fridge</span>
+            </a>
+            
+            <a href="Favorite.html" class="nav-item">
+                <div class="nav-icon-box">
+                    <img class="nav-icon-fav" src="save.png" alt="Favorite">
+                </div>
+                <span>Saved</span>
+            </a>
+            
+            <a href="Cooked.html" class="nav-item">
+                <div class="nav-icon-box">
+                    <img class="nav-icon-cook" src="cooked.png" alt="Cooked">
+                </div>
+                <span>Cooked</span>
+            </a>
+        </div>
+
+        <div class="toast" id="toast">Updated</div>
+
+        <div class="bottom-sheet-overlay" id="addSheetOverlay" onclick="closeSheet(event)">
+            <div class="bottom-sheet-content" onclick="event.stopPropagation()">
+                <div class="drag-handle"></div>
+                <div class="sheet-title">Add in fridge</div>
+                
+                <div class="search-container">
+                    <div class="search-bar">
+                        <span>Search</span>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 7V5a2 2 0 0 1 2-2h2"></path><path d="M17 3h2a2 2 0 0 1 2 2v2"></path><path d="M21 17v2a2 2 0 0 1-2 2h-2"></path><path d="M7 21H5a2 2 0 0 1-2-2v-2"></path><line x1="7" y1="12" x2="17" y2="12"></line>
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="sheet-scroll-area">
+                    
+                    <!-- Vegetable -->
+                    <div class="category-card cat-veg">
+                        <div class="category-title">Vegetable</div>
+                        <div class="food-horizontal-scroll" id="cat-vegetable">
+                        </div>
+                    </div>
+
+                    <!-- Meat -->
+                    <div class="category-card cat-meat">
+                        <div class="category-title">Meat</div>
+                        <div class="food-horizontal-scroll" id="cat-meat">
+                        </div>
+                    </div>
+
+                    <!-- Fruit -->
+                    <div class="category-card cat-fruit">
+                        <div class="category-title">Fruit</div>
+                        <div class="food-horizontal-scroll" id="cat-fruit">
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const foodLibrary = [
+            // Vegetable
+            { id: 'tomato', name: 'Tomato', category: 'vegetable', img: 'tomato.png', days: 3 },
+            { id: 'potato', name: 'Potato', category: 'vegetable', img: 'potato.png', days: 5 },
+            { id: 'lettuce', name: 'Lettuce', category: 'vegetable', img: 'lettuce.png', days: 6 },
+            { id: 'carrot', name: 'Carrot', category: 'vegetable', img: 'carrot.png', days: 10 },
+            // Meat
+            { id: 'meat', name: 'Meat', category: 'meat', img: 'beef.png', days: 5 },
+            { id: 'egg', name: 'Egg', category: 'meat', img: 'egg.png', days: 10 },
+            { id: 'pork', name: 'Pork', category: 'meat', img: 'pork.png', days: 7 },
+            // Fruit
+            { id: 'avocado', name: 'Avocado', category: 'fruit', img: 'avocado.png', days: 4 },
+            { id: 'blueberry', name: 'Blueberry', category: 'fruit', img: 'blueberry.png', days: 5 },
+            { id: 'pepper', name: 'Bell pepper', category: 'fruit', img: 'bell pepper.png', days: 8 }
+        ];
+
+        let myFridge = [
+            { id: 'tomato', days: 3 },
+            { id: 'potato', days: 5 },
+            { id: 'meat', days: 5 },
+            { id: 'lettuce', days: 6 },
+            { id: 'carrot', days: 10 },
+            { id: 'egg', days: 10 }
+        ];
+
+        function renderFridge() {
+            const listEl = document.getElementById('fridgeList');
+            const emptyEl = document.getElementById('emptyState');
+            listEl.innerHTML = ''; 
+
+            if (myFridge.length === 0) {
+                emptyEl.style.display = 'block';
+                return;
+            }
+            emptyEl.style.display = 'none';
+
+            myFridge.forEach(item => {
+                const foodInfo = foodLibrary.find(f => f.id === item.id);
+                if(!foodInfo) return;
+
+                const row = document.createElement('div');
+                row.className = 'ingredient-row';
+                row.innerHTML = `
+                    <div class="ingredient-info">
+                        <img src="${foodInfo.img}" alt="${foodInfo.name}">
+                        <div class="ingredient-text">
+                            <h3>${foodInfo.name}</h3>
+                            <p>${item.days} days Left</p>
+                        </div>
+                    </div>
+                    <button class="finished-btn" onclick="removeFood('${item.id}')">Finished</button>
+                `;
+                listEl.appendChild(row);
+            });
+        }
+
+        function renderAddSheet() {
+            const vegContainer = document.getElementById('cat-vegetable');
+            const meatContainer = document.getElementById('cat-meat');
+            const fruitContainer = document.getElementById('cat-fruit');
+
+            vegContainer.innerHTML = '';
+            meatContainer.innerHTML = '';
+            fruitContainer.innerHTML = '';
+
+            foodLibrary.forEach(food => {
+                const isInside = myFridge.some(item => item.id === food.id);
+                const iconHTML = isInside 
+                    ? `<img class="action-icon" src="minus.png" onclick="toggleFood('${food.id}', event)" alt="-">`
+                    : `<img class="action-icon" src="add.png" onclick="toggleFood('${food.id}', event)" alt="+">`;
+
+                const foodCard = `
+                    <div class="food-item">
+                        ${iconHTML}
+                        <img class="food-img" src="${food.img}" alt="${food.name}">
+                        <div class="food-name">${food.name}</div>
+                    </div>
+                `;
+
+                if (food.category === 'vegetable') vegContainer.innerHTML += foodCard;
+                if (food.category === 'meat') meatContainer.innerHTML += foodCard;
+                if (food.category === 'fruit') fruitContainer.innerHTML += foodCard;
+            });
+        }
+
+        function removeFood(id) {
+            const foodInfo = foodLibrary.find(f => f.id === id);
+            myFridge = myFridge.filter(item => item.id !== id);
+            showToast(`${foodInfo.name} removed`);
+            renderFridge();
+            renderAddSheet(); 
+        }
+
+        function toggleFood(id, event) {
+            event.stopPropagation(); 
+            const foodInfo = foodLibrary.find(f => f.id === id);
+            const isInside = myFridge.some(item => item.id === id);
+
+            if (isInside) {
+                myFridge = myFridge.filter(item => item.id !== id);
+                showToast(`${foodInfo.name} removed`);
+            } else {
+                myFridge.push({ id: foodInfo.id, days: foodInfo.days });
+                showToast(`${foodInfo.name} added`);
+            }
+
+            renderFridge();
+            renderAddSheet(); 
+        }
+
+        function openSheet() {
+            document.getElementById('addSheetOverlay').classList.add('active');
+        }
+        function closeSheet(event) {
+            if (event.target.id === 'addSheetOverlay') {
+                document.getElementById('addSheetOverlay').classList.remove('active');
+            }
+        }
+
+        let toastTimeout;
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.innerText = msg;
+            toast.classList.add('show');
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+
+        renderFridge();
+        renderAddSheet();
+    </script>
+</body>
+</html>

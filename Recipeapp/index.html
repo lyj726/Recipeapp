@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <title>Cooking Preference Radar - Grid Layout</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Work Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .app-container {
+            width: 100vw;
+            height: 100vh;
+            max-width: 402px;
+            max-height: 874px;
+            background: #F4F2EE;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header-area {
+            padding-top: max(16px, env(safe-area-inset-top, 16px));
+            padding-left: 24px;
+            padding-right: 24px;
+            flex-shrink: 0;
+            z-index: 20;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 24px;
+            margin-bottom: 20px;
+        }
+
+        .status-left {
+            font-size: 17px;
+            font-weight: 590;
+            font-family: 'SF Pro', sans-serif;
+            color: #000;
+        }
+
+        .status-right {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .battery-icon {
+            width: 25px;
+            height: 12px;
+            border: 1px solid #000;
+            border-radius: 3px;
+            position: relative;
+            opacity: 0.8;
+        }
+        .battery-icon::after {
+            content: '';
+            position: absolute;
+            right: -3px;
+            top: 3px;
+            width: 2px;
+            height: 4px;
+            background: #000;
+            border-radius: 0 1px 1px 0;
+        }
+        .battery-fill {
+            position: absolute;
+            left: 1px;
+            top: 1px;
+            bottom: 1px;
+            width: 80%;
+            background: #000;
+            border-radius: 1px;
+        }
+
+        .progress-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .progress-segment {
+            width: 30px;
+            height: 3px;
+            border-radius: 2px;
+        }
+        .progress-segment.active { background: #972B17; }
+        .progress-segment.inactive { background: #972B17; }
+
+        .title-area {
+            padding: 0 24px;
+            flex-shrink: 0;
+            margin-bottom: 12px;
+        }
+
+        .main-title {
+            font-size: 32px;
+            font-weight: 500;
+            line-height: 1.2;
+            color: #972B17;
+            letter-spacing: -0.5px;
+        }
+
+        .radar-area {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 70px 1fr 70px;
+            grid-template-rows: 30px 1fr 30px;
+            align-items: center;
+            justify-items: center;
+            padding: 0 16px;
+            min-height: 0;
+        }
+
+        .axis-label {
+            font-family: 'Rubik', 'Work Sans', sans-serif;
+            font-weight: 700;
+            font-size: 12px;
+            color: #972B17;
+            line-height: 1.3;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .label-familiarity { grid-column: 2; grid-row: 1; }
+        .label-budget { grid-column: 2; grid-row: 3; }
+        .label-time { grid-column: 1; grid-row: 2; text-align: right; }
+        .label-effort { grid-column: 3; grid-row: 2; text-align: left; }
+
+        .radar-wrapper {
+            grid-column: 2;
+            grid-row: 2;
+            width: 100%;
+            max-width: 280px; 
+            aspect-ratio: 1 / 1;
+            position: relative;
+        }
+
+        .radar-svg {
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+        }
+
+        .bottom-area {
+            padding: 0 24px max(24px, env(safe-area-inset-bottom, 24px)) 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            flex-shrink: 0;
+            margin-top: 16px;
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .control-card {
+            background: #F6F5F2;
+            border: 1px solid #E0DDD6;
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .card-label {
+            font-size: 13px;
+            font-weight: 500;
+            color: #716E65;
+        }
+
+        .control-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn-circle {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            border: 1px solid #D1CCC3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: #333;
+            background: #FFF;
+            cursor: pointer;
+            user-select: none;
+            font-family: monospace;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        .btn-circle:active { background: #EAE7E1; }
+
+        .value-display {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Rubik', sans-serif;
+            font-weight: 700;
+            font-size: 18px;
+            color: #000;
+            border: 2px solid #000;
+        }
+
+        .val-familiarity { background: #FACC5A; }
+        .val-effort { background: #9A7BE0; }
+        .val-budget { background: #FCA5C3; }
+        .val-time { background: #CDE864; }
+
+        .done-btn {
+            width: 100%;
+            height: 48px;
+            background: #972B17;
+            border-radius: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #FFF;
+            font-weight: 500;
+            font-size: 15px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(151, 43, 23, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        
+        <!-- 顶部区域 -->
+        <div class="header-area">
+            <div class="status-bar">
+                <div class="status-left">9:41</div>
+                <div class="status-right">
+                    <svg width="18" height="12" viewBox="0 0 18 12" fill="black" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="0" y="8" width="3" height="4" rx="1"/>
+                        <rect x="5" y="5" width="3" height="7" rx="1"/>
+                        <rect x="10" y="2" width="3" height="10" rx="1"/>
+                        <rect x="15" y="0" width="3" height="12" rx="1"/>
+                    </svg>
+                    <svg width="16" height="12" viewBox="0 0 16 12" fill="black" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M8 1C4.5 1 1.5 2.5 0 5L2 7C3 5.5 5.5 4 8 4C10.5 4 13 5.5 14 7L16 5C14.5 2.5 11.5 1 8 1Z"/>
+                        <circle cx="8" cy="9" r="1.5"/>
+                    </svg>
+                    <div class="battery-icon">
+                        <div class="battery-fill"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="progress-bar">
+                <div class="progress-segment active"></div>
+                <div class="progress-segment inactive"></div>
+                <div class="progress-segment inactive"></div>
+                <div class="progress-segment inactive"></div>
+                <div class="progress-segment inactive"></div>
+            </div>
+        </div>
+
+        <div class="title-area">
+            <div class="main-title">What’s your cooking preference today?</div>
+        </div>
+
+        <div class="radar-area">
+            <div class="axis-label label-familiarity">Familiarity</div>
+            <div class="axis-label label-effort">Cooking<br>Effort</div>
+            <div class="axis-label label-budget">Budget Priority</div>
+            <div class="axis-label label-time">Time<br>Available</div>
+
+            <div class="radar-wrapper">
+                <svg class="radar-svg" viewBox="0 0 344 344" id="radarSvg">
+                    <g stroke="#E0DDD6" stroke-width="1" fill="none" opacity="0.6">
+                        <circle cx="172" cy="172" r="15" />
+                        <circle cx="172" cy="172" r="30" />
+                        <circle cx="172" cy="172" r="45" />
+                        <circle cx="172" cy="172" r="60" />
+                        <circle cx="172" cy="172" r="75" />
+                        <circle cx="172" cy="172" r="90" />
+                        <circle cx="172" cy="172" r="105" />
+                        <circle cx="172" cy="172" r="120" />
+                        <circle cx="172" cy="172" r="135" />
+                        <circle cx="172" cy="172" r="150" />
+                    </g>
+                    
+                    <g stroke="#E0DDD6" stroke-width="1" opacity="0.6">
+                        <line x1="172" y1="12" x2="172" y2="332" />
+                        <line x1="12" y1="172" x2="332" y2="172" />
+                    </g>
+
+                    <g id="sectorsGroup">
+                        <path id="sector-familiarity" class="radar-sector" fill="#FACC5A" fill-opacity="0.6" stroke="#FACC5A" stroke-width="2" />
+                        <path id="sector-effort" class="radar-sector" fill="#9A7BE0" fill-opacity="0.6" stroke="#9A7BE0" stroke-width="2" />
+                        <path id="sector-budget" class="radar-sector" fill="#FCA5C3" fill-opacity="0.6" stroke="#FCA5C3" stroke-width="2" />
+                        <path id="sector-time" class="radar-sector" fill="#CDE864" fill-opacity="0.6" stroke="#CDE864" stroke-width="2" />
+                    </g>
+
+                    <circle cx="172" cy="172" r="4" fill="#972B17" />
+                </svg>
+            </div>
+        </div>
+
+        <div class="bottom-area">
+            <div class="controls-grid">
+                <div class="control-card">
+                    <div class="card-label">Familiarity</div>
+                    <div class="control-row">
+                        <div class="btn-circle" onclick="updateValue('familiarity', -1)">-</div>
+                        <div class="value-display val-familiarity" id="val-familiarity">7</div>
+                        <div class="btn-circle" onclick="updateValue('familiarity', 1)">+</div>
+                    </div>
+                </div>
+                
+                <div class="control-card">
+                    <div class="card-label">Cooking Effort</div>
+                    <div class="control-row">
+                        <div class="btn-circle" onclick="updateValue('effort', -1)">-</div>
+                        <div class="value-display val-effort" id="val-effort">3</div>
+                        <div class="btn-circle" onclick="updateValue('effort', 1)">+</div>
+                    </div>
+                </div>
+
+                <div class="control-card">
+                    <div class="card-label">Budget Priority</div>
+                    <div class="control-row">
+                        <div class="btn-circle" onclick="updateValue('budget', -1)">-</div>
+                        <div class="value-display val-budget" id="val-budget">9</div>
+                        <div class="btn-circle" onclick="updateValue('budget', 1)">+</div>
+                    </div>
+                </div>
+
+                <div class="control-card">
+                    <div class="card-label">Time Available</div>
+                    <div class="control-row">
+                        <div class="btn-circle" onclick="updateValue('time', -1)">-</div>
+                        <div class="value-display val-time" id="val-time">5</div>
+                        <div class="btn-circle" onclick="updateValue('time', 1)">+</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="done-btn" onclick="savePreferences()">Done</div>
+        </div>
+    </div>
+
+    <script>
+        const savedPref = localStorage.getItem('userPreferences');
+        const data = savedPref ? JSON.parse(savedPref) : {
+            familiarity: 7,
+            effort: 3,
+            budget: 9,
+            time: 5
+        };
+
+        const MAX_RADIUS = 150;
+        const CENTER = 172;
+
+        const sectors = [
+            { id: 'familiarity', startAngle: -45, endAngle: 45 },
+            { id: 'effort', startAngle: 45, endAngle: 135 },
+            { id: 'budget', startAngle: 135, endAngle: 225 },
+            { id: 'time', startAngle: 225, endAngle: 315 }
+        ];
+
+        function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
+            const angleInRadians = (angleInDegrees - 90) * Math.PI / 180.0;
+            return {
+                x: centerX + (radius * Math.cos(angleInRadians)),
+                y: centerY + (radius * Math.sin(angleInRadians))
+            };
+        }
+
+        function describeArc(x, y, radius, startAngle, endAngle) {
+            const start = polarToCartesian(x, y, radius, endAngle);
+            const end = polarToCartesian(x, y, radius, startAngle);
+            const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+            return [
+                "M", start.x, start.y, 
+                "A", radius, radius, 0, largeArcFlag, 0, end.x, end.y,
+                "L", x, y, "Z"
+            ].join(" ");
+        }
+
+        function updateChart() {
+            sectors.forEach(sector => {
+                const val = data[sector.id];
+                const radius = (val / 10) * MAX_RADIUS;
+                const pathData = describeArc(CENTER, CENTER, radius, sector.startAngle, sector.endAngle);
+                
+                document.getElementById(`sector-${sector.id}`).setAttribute('d', pathData);
+
+                document.getElementById(`val-${sector.id}`).innerText = val;
+            });
+        }
+
+        function updateValue(key, delta) {
+            let newValue = data[key] + delta;
+            if (newValue < 1) newValue = 1;
+            if (newValue > 10) newValue = 10;
+            data[key] = newValue;
+            updateChart();
+        }
+
+        window.onload = updateChart;
+
+        function savePreferences() {
+            localStorage.setItem('userPreferences', JSON.stringify(data));
+            window.location.href = 'Home.html';
+        }
+    </script>
+</body>
+</html>

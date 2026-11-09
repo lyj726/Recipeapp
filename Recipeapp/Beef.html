@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Cooking App - Beef Recipe</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* ================= 基础与通用样式 ================= */
+        body {
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Work Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .app-container {
+            width: 100vw;
+            height: 100vh;
+            max-width: 402px;
+            max-height: 874px;
+            background: #FCE9BC;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ================= 顶部背景图 ================= */
+        .hero-image-container {
+            width: 100%;
+            height: 50vh;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        .hero-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .icon-btn {
+            position: absolute;
+            top: max(20px, env(safe-area-inset-top, 20px));
+            width: 40px;
+            height: 40px;
+            background: #FFF;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+        .icon-btn.back { left: 24px; }
+        .icon-btn.fav { right: 24px; }
+
+        /* ================= 详情页内容区 ================= */
+        .recipe-details {
+            position: absolute;
+            top: 35vh;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #FCE9BC;
+            border-radius: 24px 24px 0 0;
+            overflow-y: auto;
+            scrollbar-width: none;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+        }
+        .recipe-details::-webkit-scrollbar { display: none; }
+
+        .details-content {
+            padding: 24px;
+            padding-bottom: 110px;
+        }
+
+        .drag-handle {
+            width: 40px;
+            height: 4px;
+            background: #D1CCC3;
+            border-radius: 2px;
+            margin: 12px auto 0 auto;
+        }
+
+        .title-row {
+            font-size: 24px;
+            font-weight: 600;
+            color: #972B17;
+            margin-bottom: 8px;
+        }
+
+        .rating-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #972B17;
+            margin-bottom: 16px;
+        }
+
+        .stars { color: #D98A2C; font-size: 16px; letter-spacing: 2px; }
+        .reviews { color: #716E65; }
+
+        .description {
+            font-size: 14px;
+            color: #333;
+            line-height: 1.5;
+            margin-bottom: 24px;
+        }
+        
+        .read-more { color: #972B17; font-weight: 500; cursor: pointer; }
+
+        .info-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .info-card {
+            background: #FCE9BC;
+            border: 1px solid #972B17;
+            border-radius: 12px;
+            padding: 12px 8px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .info-card .value { font-size: 16px; font-weight: 700; color: #1A1A1A; margin-bottom: 4px; }
+        .info-card .label { font-size: 10px; color: #716E65; }
+
+        .list-card {
+            background: #F8BE8F;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .list-title { font-size: 18px; font-weight: 600; color: #1A1A1A; margin-bottom: 16px; }
+
+        .list-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            row-gap: 12px;
+            column-gap: 8px;
+        }
+
+        .list-item { font-size: 14px; color: #1A1A1A; font-weight: 500; }
+
+        .bottom-fixed-action {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            padding: 16px 24px max(24px, env(safe-area-inset-bottom, 24px)) 24px;
+            background: linear-gradient(to top, #FCE9BC 70%, transparent);
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        .start-btn {
+            width: 100%;
+            height: 56px;
+            background: #972B17;
+            border-radius: 28px;
+            color: #FFF;
+            font-size: 18px;
+            font-weight: 500;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(151, 43, 23, 0.2);
+            border: none;
+            pointer-events: auto;
+        }
+
+        .steps-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: #F4F2EE;
+            border-radius: 32px 32px 0 0;
+            transform: translateY(100%);
+            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.1);
+        }
+
+        .steps-overlay.active {
+            transform: translateY(0);
+        }
+
+        .step-image-container {
+            width: 100%;
+            height: 250px;
+            background: #E0DDD6;
+            flex-shrink: 0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .step-image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .steps-overlay .drag-handle {
+            position: absolute;
+            top: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.7);
+            z-index: 10;
+            margin: 0;
+        }
+
+        .step-content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            padding-bottom: 100px;
+            scrollbar-width: none;
+            background: #F4F2EE;
+            border-radius: 24px 24px 0 0;
+            margin-top: -24px;
+            z-index: 5;
+            position: relative;
+        }
+        .step-content-area::-webkit-scrollbar { display: none; }
+
+        .step-header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .step-number {
+            font-size: 22px;
+            font-weight: 600;
+            color: #1A1A1A;
+            margin-bottom: 12px;
+        }
+
+        .step-indicators {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: nowrap;
+        }
+
+        .indicator {
+            font-size: 12px;
+            font-weight: 500;
+            color: #D1CCC3;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        .indicator.active {
+            color: #FFF;
+            background: #972B17;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .indicator.finish {
+            color: #972B17;
+            border: 1px solid #972B17;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .indicator.finish.active {
+            background: #972B17;
+            color: #FFF;
+        }
+
+        .step-main-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1A1A1A;
+            text-align: center;
+            margin-bottom: 24px;
+            margin-top: 16px;
+        }
+
+        .instruction-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .instruction-item {
+            display: flex;
+            gap: 16px;
+            font-size: 15px;
+            color: #333;
+            line-height: 1.5;
+        }
+
+        .instruction-number {
+            font-weight: 600;
+            color: #1A1A1A;
+            min-width: 20px;
+        }
+
+        .step-action-bar {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            padding: 16px 24px max(24px, env(safe-area-inset-bottom, 24px)) 24px;
+            background: #F4F2EE;
+            display: flex;
+            gap: 12px;
+            z-index: 10;
+        }
+
+        .step-btn {
+            flex: 1;
+            height: 48px;
+            border-radius: 24px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: none;
+        }
+
+        .step-btn.prev {
+            background: transparent;
+            border: 1px solid #972B17;
+            color: #972B17;
+        }
+
+        .step-btn.next {
+            background: #972B17;
+            color: #FFF;
+        }
+
+        .d-none { display: none !important; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        
+        <div class="hero-image-container">
+            <img class="hero-image" src="Beef & Tomato Stir Fry.png" alt="Recipe Image">
+            
+            <div class="icon-btn back" onclick="window.location.href='Home.html'">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#972B17" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+            </div>
+            
+            <div class="icon-btn fav">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#972B17" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                </svg>
+            </div>
+        </div>
+
+        <div class="recipe-details">
+            <div class="drag-handle"></div>
+            <div class="details-content">
+                <div class="title-row">Beef and Tomato Stir Fry</div>
+                
+                <div class="rating-row">
+                    <span class="stars">★★★★☆</span>
+                    <span>(4.0)</span>
+                    <span class="reviews">(56 Reviews)</span>
+                </div>
+
+                <div class="description">
+                    Tomato and beef stir-fry is a classic that never fails to deliver. This savory, tangy, and slightly sweet dish combines <span class="read-more">...more</span>
+                </div>
+
+                <div class="info-cards">
+                    <div class="info-card">
+                        <div class="value">25 min</div>
+                        <div class="label">Time need</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="value">8 steps</div>
+                        <div class="label">Complexity</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="value">210</div>
+                        <div class="label">Calorie (kcal)</div>
+                    </div>
+                </div>
+
+                <div class="list-card">
+                    <div class="list-title">Cookware</div>
+                    <div class="list-grid">
+                        <div class="list-item">1. Knife</div>
+                        <div class="list-item">3. Pan</div>
+                        <div class="list-item">2. Cutting board</div>
+                        <div class="list-item">4. Spatula</div>
+                    </div>
+                </div>
+
+                <div class="list-card">
+                    <div class="list-title">Ingredients</div>
+                    <div class="list-grid">
+                        <div class="list-item">1. Beef</div>
+                        <div class="list-item">6. Ketchup</div>
+                        <div class="list-item">2. Tomato</div>
+                        <div class="list-item">7. Sugar</div>
+                        <div class="list-item">3. Green onions</div>
+                        <div class="list-item">8. Salt</div>
+                        <div class="list-item">4. Soy sauce</div>
+                        <div class="list-item">9. Vegetable oil</div>
+                        <div class="list-item">5. Cornstarch</div>
+                        <div class="list-item"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bottom-fixed-action">
+            <button class="start-btn" onclick="startCooking()">Start Cooking</button>
+        </div>
+
+
+        <div class="steps-overlay" id="stepsOverlay">
+            
+            <div class="step-image-container">
+                <div class="drag-handle"></div>
+                <img id="stepImage" src="Beef1.png" alt="Step Image">
+            </div>
+
+            <div class="step-content-area" id="stepScrollArea">
+                
+                <!-- Step 1 -->
+                <div id="step1Content" class="step-container">
+                    <div class="step-header">
+                        <div class="step-number">Step 1</div>
+                        <div class="step-indicators">
+                            <div class="indicator active">1</div>
+                            <div class="indicator">2</div>
+                            <div class="indicator">3</div>
+                            <div class="indicator">4</div>
+                            <div class="indicator">5</div>
+                            <div class="indicator">6</div>
+                            <div class="indicator">7</div>
+                            <div class="indicator">8</div>
+                            <div class="indicator finish">F</div>
+                        </div>
+                    </div>
+                    <div class="step-main-title">Prepare ingredients</div>
+                    <div class="instruction-list">
+                        <div class="instruction-item"><div class="instruction-number">1</div><div>Slice the beef against the grain into 1/4" (0.5 cm) thick slices.</div></div>
+                        <div class="instruction-item"><div class="instruction-number">2</div><div>Transfer to a small bowl.</div></div>
+                        <div class="instruction-item"><div class="instruction-number">3</div><div>Add the soy sauce and cornstarch.</div></div>
+                        <div class="instruction-item"><div class="instruction-number">4</div><div>Gently mix well by hand until all the slices are coated with a thin layer of sauce.</div></div>
+                        <div class="instruction-item"><div class="instruction-number">5</div><div>Marinate for 10 to 15 minutes while preparing the other ingredients.</div></div>
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div id="step2Content" class="step-container d-none">
+                    <div class="step-header">
+                        <div class="step-number">Step 2</div>
+                        <div class="step-indicators">
+                            <div class="indicator">1</div>
+                            <div class="indicator active">2</div>
+                            <div class="indicator">3</div>
+                            <div class="indicator">4</div>
+                            <div class="indicator">5</div>
+                            <div class="indicator">6</div>
+                            <div class="indicator">7</div>
+                            <div class="indicator">8</div>
+                            <div class="indicator finish">F</div>
+                        </div>
+                    </div>
+                    <div class="step-main-title">Prepare ingredients</div>
+                    <div class="instruction-list">
+                        <div class="instruction-item"><div class="instruction-number">1</div><div>Combine all the ingredients for the sauce in a medium-sized bowl. Mix well.</div></div>
+                    </div>
+                </div>
+
+                <!-- Step 3 -->
+                <div id="step3Content" class="step-container d-none">
+                    <div class="step-header">
+                        <div class="step-number">Step 3</div>
+                        <div class="step-indicators">
+                            <div class="indicator">1</div>
+                            <div class="indicator">2</div>
+                            <div class="indicator active">3</div>
+                            <div class="indicator">4</div>
+                            <div class="indicator">5</div>
+                            <div class="indicator">6</div>
+                            <div class="indicator">7</div>
+                            <div class="indicator">8</div>
+                            <div class="indicator finish">F</div>
+                        </div>
+                    </div>
+                    <div class="step-main-title">Prepare ingredients</div>
+                    <div class="instruction-list">
+                        <div class="instruction-item"><div class="instruction-number">1</div><div>Mix the cornstarch with water in a small bowl to make a slurry.</div></div>
+                    </div>
+                </div>
+
+                <!-- Step 4 -->
+                <div id="step4Content" class="step-container d-none">
+                    <div class="step-header">
+                        <div class="step-number">Step 4</div>
+                        <div class="step-indicators">
+                            <div class="indicator">1</div>
+                            <div class="indicator">2</div>
+                            <div class="indicator">3</div>
+                            <div class="indicator active">4</div>
+                            <div class="indicator">5</div>
+                            <div class="indicator">6</div>
+                            <div class="indicator">7</div>
+                            <div class="indicator">8</div>
+                            <div class="indicator finish">F</div>
+                        </div>
+                    </div>
+                    <div class="step-main-title">Cook</div>
+                    <div class="instruction-list">
+                        <div class="instruction-item"><div class="instruction-number">1</div><div>Pour in 1 tablespoon of oil and swirl to coat the bottom.</div></div>
+                        <div class="instruction-item"><div class="instruction-number">2</div><div>Heat over medium-high heat until hot.</div></div>
+                        <div class="instruction-item"><div class="instruction-number">3</div><div>Spread the beef in a single layer.</div></div>
+                        <div class="instruction-item"><div class="instruction-number">4</div><div>Allow to cook without touching for 30 seconds, or until the bottom side is browned.</div></div>
+                        <div class="instruction-item"><div class="instruction-number">5</div><div>Flip to cook the other side for a few seconds.</div></div>
+                        <div class="instruction-item"><div class="instruction-number">6</div><div>Stir and cook until the surface is lightly charred and the inside is still pink.</div></div>
+                        <div class="instruction-item"><div class="instruction-number">7</div><div>Transfer to a plate.</div></div>
+                    </div>
+                </div>
+
+                <!-- Step 5 -->
+                <div id="step5Content" class="step-container d-none">
+                    <div class="step-header">
+                        <div class="step-number">Step 5</div>
+                        <div class="step-indicators">
+                            <div class="indicator">1</div>
+                            <div class="indicator">2</div>
+                            <div class="indicator">3</div>
+                            <div class="indicator">4</div>
+                            <div class="indicator active">5</div>
+                            <div class="indicator">6</div>
+                            <div class="indicator">7</div>
+                            <div class="indicator">8</div>
+                            <div class="indicator finish">F</div>
+                        </div>
+                    </div>
+                    <div class="step-main-title">Cook</div>
+                    <div class="instruction-list">
+                        <div class="instruction-item"><div class="instruction-number">1</div><div>Pour in the remaining 1 tablespoon of oil and add the green onion white part.</div></div>
+                        <div class="instruction-item"><div class="instruction-number">2</div><div>Stir a few times to release the flavor and fragrance.</div></div>
+                    </div>
+                </div>
+
+                <!-- Step 6 -->
+                <div id="step6Content" class="step-container d-none">
+                    <div class="step-header">
+                        <div class="step-number">Step 6</div>
+                        <div class="step-indicators">
+                            <div class="indicator">1</div>
+                            <div class="indicator">2</div>
+                            <div class="indicator">3</div>
+                            <div class="indicator">4</div>
+                            <div class="indicator">5</div>
+                            <div class="indicator active">6</div>
+                            <div class="indicator">7</div>
+                            <div class="indicator">8</div>
+                            <div class="indicator finish">F</div>
+                        </div>
+                    </div>
+                    <div class="step-main-title">Cook</div>
+                    <div class="instruction-list">
+                        <div class="instruction-item"><div class="instruction-number">1</div><div>Add the tomato.</div></div>
+                        <div class="instruction-item"><div class="instruction-number">2</div><div>Cook and stir until the tomato starts to break down and has turned tender.</div></div>
+                    </div>
+                </div>
+
+                <!-- Step 7 -->
+                <div id="step7Content" class="step-container d-none">
+                    <div class="step-header">
+                        <div class="step-number">Step 7</div>
+                        <div class="step-indicators">
+                            <div class="indicator">1</div>
+                            <div class="indicator">2</div>
+                            <div class="indicator">3</div>
+                            <div class="indicator">4</div>
+                            <div class="indicator">5</div>
+                            <div class="indicator">6</div>
+                            <div class="indicator active">7</div>
+                            <div class="indicator">8</div>
+                            <div class="indicator finish">F</div>
+                        </div>
+                    </div>
+                    <div class="step-main-title">Cook</div>
+                    <div class="instruction-list">
+                        <div class="instruction-item"><div class="instruction-number">1</div><div>Add back the cooked beef and pour in the sauce.</div></div>
+                        <div class="instruction-item"><div class="instruction-number">2</div><div>Stir a few times to mix everything together.</div></div>
+                    </div>
+                </div>
+
+                <!-- Step 8 -->
+                <div id="step8Content" class="step-container d-none">
+                    <div class="step-header">
+                        <div class="step-number">Step 8</div>
+                        <div class="step-indicators">
+                            <div class="indicator">1</div>
+                            <div class="indicator">2</div>
+                            <div class="indicator">3</div>
+                            <div class="indicator">4</div>
+                            <div class="indicator">5</div>
+                            <div class="indicator">6</div>
+                            <div class="indicator">7</div>
+                            <div class="indicator active">8</div>
+                            <div class="indicator finish">F</div>
+                        </div>
+                    </div>
+                    <div class="step-main-title">Cook</div>
+                    <div class="instruction-list">
+                        <div class="instruction-item"><div class="instruction-number">1</div><div>Stir the cornstarch slurry again so it dissolves completely.</div></div>
+                        <div class="instruction-item"><div class="instruction-number">2</div><div>Pour half of it into the pan and stir to thicken the sauce.</div></div>
+                        <div class="instruction-item"><div class="instruction-number">3</div><div>Observe the sauce and add the rest of the slurry if it's not thick enough.</div></div>
+                        <div class="instruction-item"><div class="instruction-number">4</div><div>Turn to lowest heat and taste the dish.</div></div>
+                        <div class="instruction-item"><div class="instruction-number">5</div><div>Sprinkle with a bit more salt to adjust seasoning if needed.</div></div>
+                        <div class="instruction-item"><div class="instruction-number">6</div><div>Add the green onion green part and give it a final stir.</div></div>
+                    </div>
+                </div>
+
+                <!-- Step 9 (Final) -->
+                <div id="step9Content" class="step-container d-none">
+                    <div class="step-header">
+                        <div class="step-number">Step 9</div>
+                        <div class="step-indicators">
+                            <div class="indicator">1</div>
+                            <div class="indicator">2</div>
+                            <div class="indicator">3</div>
+                            <div class="indicator">4</div>
+                            <div class="indicator">5</div>
+                            <div class="indicator">6</div>
+                            <div class="indicator">7</div>
+                            <div class="indicator">8</div>
+                            <div class="indicator finish active">F</div>
+                        </div>
+                    </div>
+                    <div class="step-main-title">Finished!</div>
+                    <div class="instruction-list">
+                        <div class="instruction-item"><div class="instruction-number">1</div><div>Transfer everything to a plate immediately. Serve hot as a main dish.</div></div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="step-action-bar">
+                <button class="step-btn prev" id="prevBtn" onclick="prevStep()">Previous Step</button>
+                <button class="step-btn next" id="nextBtn" onclick="nextStep()">Next Step</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let currentStep = 1;
+        const totalSteps = 9;
+        const stepsOverlay = document.getElementById('stepsOverlay');
+        const stepImage = document.getElementById('stepImage');
+
+        const stepImages = [
+            '1Beef & Potato Stew.png',
+            '2Beef & Potato Stew.png',
+            '3Beef & Potato Stew.png',
+            '4Beef & Potato Stew.png',
+            '5Beef & Potato Stew.png',
+            '6Beef & Potato Stew.png',
+            '7Beef & Potato Stew.png',
+            '8Beef & Potato Stew.png',
+            '9Beef & Potato Stew.png'
+        ];
+
+        function startCooking() {
+            currentStep = 1;
+            stepsOverlay.classList.add('active');
+            updateStepUI();
+        }
+
+        function closeCookingPanel() {
+            stepsOverlay.classList.remove('active');
+        }
+
+        function nextStep() {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                updateStepUI();
+            } else {
+                finishCooking();
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 1) {
+                currentStep--;
+                updateStepUI();
+            } else if (currentStep === 1) {
+                closeCookingPanel();
+            }
+        }
+
+        function updateStepUI() {
+            for (let i = 1; i <= totalSteps; i++) {
+                document.getElementById(`step${i}Content`).classList.add('d-none');
+            }
+
+            document.getElementById(`step${currentStep}Content`).classList.remove('d-none');
+            
+            stepImage.src = stepImages[currentStep - 1];
+
+            document.getElementById('stepScrollArea').scrollTop = 0;
+
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+
+            if (currentStep === 1) {
+                prevBtn.innerText = 'Previous Step';
+                nextBtn.innerText = 'Next Step';
+            } else if (currentStep === totalSteps) {
+                prevBtn.innerText = 'Previous Step';
+                nextBtn.innerText = 'Finish';
+            } else {
+                prevBtn.innerText = 'Previous Step';
+                nextBtn.innerText = 'Next Step';
+            }
+        }
+
+        function finishCooking() {
+            alert("Congratulations! You've finished cooking!");
+            closeCookingPanel();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Cooking App - Favorite</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .favorite-scroll-area {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-bottom: 110px; 
+            padding-top: 16px;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none; 
+        }
+        .favorite-scroll-area::-webkit-scrollbar { display: none; }
+
+        .favorite-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 24px;
+            margin-top: 10px;
+            margin-bottom: 20px;
+        }
+        .favorite-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #972B17;
+        }
+        .favorite-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .filter-icon {
+            width: 24px;
+            height: 24px;
+            object-fit: contain;
+        }
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .search-container {
+            padding: 0 24px;
+            margin-bottom: 0px;
+        }
+        .search-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #972B17;
+            height: 48px;
+            border-radius: 24px;
+            padding: 0 20px;
+            color: #FFF;
+            font-size: 15px;
+        }
+        .search-icon {
+            width: 20px;
+            height: 20px;
+            object-fit: contain;
+            filter: brightness(0) invert(1);
+        }
+
+        .recipe-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            padding: 0 24px;
+        }
+
+        .recipe-card {
+            background: #FCE9BC; 
+            border-radius: 20px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            overflow: hidden;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .recipe-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #972B17;
+            padding-left: 2px;
+        }
+        .recipe-image {
+            width: 98%;
+            height: 180px;
+            border-radius: 16px;
+            object-fit: cover;
+            align-self: center;
+        }
+        
+        .recipe-info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 4px;
+        }
+        .recipe-stats {
+            display: flex;
+            gap: 12px; 
+            margin-left: 8px;
+            align-items: center;
+        }
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        .stat-item:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            right: -6px;
+            top: 10%;
+            height: 80%;
+            width: 1px;
+            background: #D1C299;
+        }
+        .stat-value {
+            font-size: 14px; 
+            font-weight: 600;
+            color: #1A1A1A;
+        }
+        .stat-label {
+            font-size: 10px;
+            color: #716E65;
+            margin-top: 2px;
+        }
+        
+        .saved-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            color: #972B17; 
+            font-size: 11px;
+            font-weight: 600;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+        .saved-btn img {
+            width: 20px;
+            height: 18px;
+        }
+
+        .empty-fav {
+            text-align: center;
+            color: #972B17;
+            opacity: 0.5;
+            font-size: 14px;
+            margin-top: 40px;
+            display: none;
+        }
+
+        .floating-bottom-nav {
+            position: absolute; 
+            bottom: max(20px, env(safe-area-inset-bottom, 20px));
+            left: 24px; 
+            right: 24px; 
+            height: 64px;
+            background: rgba(255, 255, 255, 0.85); 
+            backdrop-filter: blur(12px); 
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 32px; 
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            display: flex; 
+            justify-content: space-around; 
+            align-items: center; 
+            z-index: 100;
+        }
+        .nav-item {
+            display: flex; 
+            flex-direction: column; 
+            align-items: center;
+            gap: 4px; 
+            color: #A39F96; 
+            font-size: 10px; 
+            font-weight: 500;
+            cursor: pointer; 
+            width: 60px; 
+            text-decoration: none;
+        }
+        .nav-item.active { color: #972B17; }
+        
+        .nav-icon-box {
+            width: 28px; 
+            height: 28px; 
+            position: relative; 
+            margin-bottom: 4px;
+        }
+        .nav-icon-box img {
+            position: absolute; 
+            top: 50%; 
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: block; 
+            object-fit: contain;
+            filter: grayscale(100%) opacity(50%);
+            transition: 0.2s;
+        }
+        .nav-item.active img { filter: grayscale(0%) opacity(100%); }
+        .nav-item span {
+            font-size: 10px; 
+            font-weight: 500; 
+            color: #A39F96; 
+            line-height: 1;
+        }
+        .nav-item.active span { color: #972B17; }
+
+        .nav-icon-home { width: 30px; height: 30px; }
+        .nav-icon-fridge { width: 28px; height: 28px; }
+        .nav-icon-fav { width: 23px; height: 23px; }
+        .nav-icon-cook { width: 25px; height: 25px; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        
+        <div class="status-bar">
+            <div class="status-left">9:41</div>
+            <div class="status-right">
+                <svg width="18" height="12" viewBox="0 0 18 12" fill="black"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="2" width="3" height="10" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>
+                <div class="battery-icon"><div class="battery-fill"></div></div>
+            </div>
+        </div>
+
+        <div class="favorite-header">
+            <div class="favorite-title">Favorite recipes</div>
+            <div class="favorite-header-actions">
+                <a href="index.html">
+                    <img class="filter-icon" src="preference.png" alt="Preference">
+                </a>
+                <img class="avatar" src="Persona.png" alt="Leila">
+            </div>
+        </div>
+
+        <div class="search-container">
+            <div class="search-bar">
+                <span>Search</span>
+                <img class="search-icon" src="search.png" alt="Search">
+            </div>
+        </div>
+
+        <div class="favorite-scroll-area">
+            <div class="recipe-list" id="favRecipeList">
+                <!-- JS 会在这里注入内容 -->
+            </div>
+            <div class="empty-fav" id="emptyFav">
+                You haven't saved any recipes yet.<br>Go to Home to save some!
+            </div>
+        </div>
+
+        <div class="floating-bottom-nav">
+            <a href="Home.html" class="nav-item">
+                <div class="nav-icon-box">
+                    <img class="nav-icon-home" src="home.png" alt="Home">
+                </div>
+                <span>Home</span>
+            </a>
+            
+            <a href="fridge.html" class="nav-item">
+                <div class="nav-icon-box">
+                    <img class="nav-icon-fridge" src="fridge.png" alt="Fridge">
+                </div>
+                <span>Fridge</span>
+            </a>
+            
+            <a href="Favorite.html" class="nav-item active">
+                <div class="nav-icon-box">
+                    <img class="nav-icon-fav" src="saved.png" onerror="this.src='save.png'" alt="Favorite">
+                </div>
+                <span>Saved</span>
+            </a>
+            
+            <a href="Cooked.html" class="nav-item">
+                <div class="nav-icon-box">
+                    <img class="nav-icon-cook" src="cooked.png" alt="Cooked">
+                </div>
+                <span>Cooked</span>
+            </a>
+        </div>
+
+    </div>
+
+    <script>
+        const recipes = [
+            { 
+                id: 'tomato_egg', 
+                title: 'Tomato & Egg Stir Fry', 
+                image: 'Tomato & Egg Stir Fry.png', 
+                time: '10 min', 
+                complexity: '3 steps', 
+                calorie: '180' 
+            },
+            { 
+                id: 'beef_tomato', 
+                title: 'Beef & Tomato Stir Fry', 
+                image: 'Beef & Tomato Stir Fry.png', 
+                time: '25 min', 
+                complexity: '8 steps', 
+                calorie: '210' 
+            },
+            { 
+                id: 'beef_potato', 
+                title: 'Beef & Potato Stew', 
+                image: 'Beef & Potato Stew.png', 
+                time: '50 min', 
+                complexity: '3 steps', 
+                calorie: '380' 
+            }
+        ];
+
+        function getSavedRecipes() {
+            const saved = localStorage.getItem('savedRecipes');
+            return saved ? JSON.parse(saved) : [];
+        }
+
+        function removeFromFav(id, event) {
+            event.stopPropagation();
+            let saved = getSavedRecipes();
+            saved = saved.filter(item => item !== id);
+            localStorage.setItem('savedRecipes', JSON.stringify(saved));
+            renderFavRecipes();
+        }
+
+        function renderFavRecipes() {
+            const list = document.getElementById('favRecipeList');
+            const emptyEl = document.getElementById('emptyFav');
+            const savedIds = getSavedRecipes();
+            list.innerHTML = '';
+
+            if (savedIds.length === 0) {
+                emptyEl.style.display = 'block';
+                return;
+            }
+            emptyEl.style.display = 'none';
+
+            recipes.forEach(recipe => {
+                if (savedIds.includes(recipe.id)) {
+                    const card = document.createElement('div');
+                    card.className = 'recipe-card';
+                    card.innerHTML = `
+                        <div class="recipe-title">${recipe.title}</div>
+                        <img class="recipe-image" src="${recipe.image}" alt="${recipe.title}">
+                        <div class="recipe-info-row">
+                            <div class="recipe-stats">
+                                <div class="stat-item">
+                                    <span class="stat-value">${recipe.time}</span>
+                                    <span class="stat-label">Time need</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-value">${recipe.complexity}</span>
+                                    <span class="stat-label">Complexity</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-value">${recipe.calorie}</span>
+                                    <span class="stat-label">Calorie (kcal)</span>
+                                </div>
+                            </div>
+                            <div class="saved-btn" onclick="removeFromFav('${recipe.id}', event)">
+                                <img src="saved.png" onerror="this.src='save.png'" alt="Saved">
+                                Saved
+                            </div>
+                        </div>
+                    `;
+                    list.appendChild(card);
+                }
+            });
+        }
+
+        renderFavRecipes();
+    </script>
+</body>
+</html>
